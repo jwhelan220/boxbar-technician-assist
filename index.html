@@ -189,6 +189,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
           </select>
         </div>
       </div>
+      <div class="card-row">
+        <label>Weather Temp</label>
+        <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+          <input type="number" id="weatherTemp" oninput="autoSave()" style="width:70px;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:var(--font);text-align:right;-webkit-appearance:none;"/>
+          <span style="font-size:14px;color:var(--text-muted);">°C</span>
+        </div>
+      </div>
       <div class="card-row" style="border-bottom:none;flex-direction:column;align-items:flex-start;gap:8px;padding-bottom:14px;">
         <label style="font-size:14px;color:var(--text-muted);">Venue</label>
         <select id="venueInput" onchange="onVenueSelect()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-family:var(--font);padding:10px 10px;outline:none;-webkit-appearance:none;cursor:pointer;">
@@ -613,6 +620,7 @@ function collectState() {
     arrivalMin: document.getElementById("arrivalMin").value,
     arrivalAmPm: document.getElementById("arrivalAmPm").value,
     venue: getVenue(),
+    weatherTemp: document.getElementById("weatherTemp").value,
     locationCount, machineCounters, locs,
     savedAt: new Date().toLocaleString("en-GB")
   };
@@ -624,6 +632,7 @@ function restoreState(data) {
   sv("arrivalHour",data.arrivalHour); sv("arrivalMin",data.arrivalMin);
   const amPm=document.getElementById("arrivalAmPm"); if(amPm&&data.arrivalAmPm) amPm.value=data.arrivalAmPm;
   const venueEl=document.getElementById("venueInput"); if(venueEl && data.venue) venueEl.value=data.venue;
+  const wtEl=document.getElementById("weatherTemp"); if(wtEl) wtEl.value=data.weatherTemp||"";
   locationCount=data.locationCount||0; machineCounters=data.machineCounters||{};
   (data.locs||[]).forEach(loc => {
     const lid=parseInt(loc.lid);
@@ -755,9 +764,10 @@ function buildReportText(data) {
     : "";
   let lines=[];
   if (data.eventName) lines.push("Event: "+data.eventName);
-  if (data.date)      lines.push("Date: "+data.date);
-  if (arrivalFull)    lines.push("Arrival Time: "+arrivalFull);
-  if (data.venue)     lines.push("Venue: "+data.venue);
+  if (data.date)        lines.push("Date: "+data.date);
+  if (arrivalFull)      lines.push("Arrival Time: "+arrivalFull);
+  if (data.weatherTemp) lines.push("Weather Temp: "+data.weatherTemp+"°C");
+  if (data.venue)       lines.push("Venue: "+data.venue);
   lines.push("");
   (data.locs||[]).forEach((loc,li) => {
     if (li>0) lines.push("");
@@ -799,7 +809,7 @@ function confirmSubmit() {
   (data.locs||[]).forEach(loc => {
     (loc.machines||[]).forEach((m,mi) => {
       rows.push([
-        timestamp, data.eventName||"", data.date||"", arrivalFull, data.venue||"",
+        timestamp, data.eventName||"", data.date||"", arrivalFull, data.weatherTemp||"", data.venue||"",
         loc.zone||"", loc.temp||"", loc.freshKegs||"", loc.internet||"", loc.testPayment||"", loc.staffTrained||"",
         (m.machineNumber ? "M"+m.machineNumber : ("M"+(mi+1))), m.product||"", m.psi||"", m.tap1||"", m.tap2||"", m.notes||""
       ]);
@@ -850,7 +860,7 @@ function closeClearModal() { document.getElementById("clearModal").classList.rem
 function clearAll() {
   document.querySelectorAll(".tab-panel[id^='panel-loc-']").forEach(p=>p.remove());
   document.querySelectorAll(".tab-btn[id^='tab-loc-']").forEach(b=>b.remove());
-  ["eventName","eventDateDisplay","arrivalHour","arrivalMin"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  ["eventName","eventDateDisplay","arrivalHour","arrivalMin","weatherTemp"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
   document.getElementById("arrivalAmPm").value="";
   document.getElementById("venueInput").value="";
   locationCount=0; machineCounters={};
